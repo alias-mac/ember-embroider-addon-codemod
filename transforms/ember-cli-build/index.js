@@ -18,7 +18,7 @@ module.exports = function transformer(file, api) {
     },
   });
 
-  // find the the variable assigned to `new EmberAddon()`
+  // find the variable assigned to `new EmberAddon()`
   const newEmberAddon = defaultExports.find(j.VariableDeclarator, {
     init: {
       type: 'NewExpression',
