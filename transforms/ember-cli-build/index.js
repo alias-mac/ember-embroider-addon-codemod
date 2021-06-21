@@ -2,7 +2,7 @@ const { getParser } = require('codemod-cli').jscodeshift;
 
 module.exports = function transformer(file, api) {
   const j = getParser(api);
-  const { statement, statements } = j.template;
+  const { statements } = j.template;
   const root = j(file.source);
 
   // find nodejs default export
@@ -40,7 +40,33 @@ module.exports = function transformer(file, api) {
   });
 
   if (maybeEmbroider.size() >= 1) {
-    // already transformed
+    // already using embroider setup, replace code with specific for LI case
+    defaultExports
+      .find(j.ReturnStatement, {
+        argument: {
+          type: 'CallExpression',
+          callee: {
+            type: 'Identifier',
+            name: 'maybeEmbroider',
+          },
+          // not passing options already
+          arguments: { length: 1 },
+        },
+      })
+      // and convert them into `maybeEmbroider` calls
+      .forEach((p) => {
+        j(p).replaceWith(statements`
+
+          // temporary adapters for embroider build at LI
+          const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
+          const adapters = compatAdapters();
+
+          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name}, {
+            compatAdapters: new Map(adapters),
+          });
+        `);
+      });
+
     return root.toSource();
   }
 
@@ -79,9 +105,16 @@ module.exports = function transformer(file, api) {
     })
     .forEach((p) => {
       j(p.parent).insertAfter(
-        statement`return maybeEmbroider(${
-          newEmberAddon.paths()[0].value.id.name
-        });`,
+        statements`
+
+          // temporary adapters for embroider build at LI
+          const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
+          const adapters = compatAdapters();
+
+          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name}, {
+            compatAdapters: new Map(adapters),
+          });
+        `,
       );
     })
     .toSource();

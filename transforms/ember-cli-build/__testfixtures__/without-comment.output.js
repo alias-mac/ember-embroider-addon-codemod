@@ -8,5 +8,12 @@ module.exports = function (defaults) {
   });
 
   const { maybeEmbroider } = require('@embroider/test-setup');
-  return maybeEmbroider(app);
+
+  // temporary adapters for embroider build at LI
+  const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
+  const adapters = compatAdapters();
+
+  return maybeEmbroider(app, {
+    compatAdapters: new Map(adapters),
+  });
 };
