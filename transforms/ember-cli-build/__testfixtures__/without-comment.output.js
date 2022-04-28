@@ -9,7 +9,6 @@ module.exports = function (defaults) {
 
   const { maybeEmbroider } = require('@embroider/test-setup');
 
-  // temporary adapters for embroider build at LI
   const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
   const adapters = compatAdapters();
 
