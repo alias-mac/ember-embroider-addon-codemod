@@ -14,6 +14,7 @@ module.exports = function (defaults) {
     behave. You most likely want to be modifying `./index.js` or app's build file
   */
 
-  const { maybeEmbroider } = require('@embroider/test-setup');
+  const { maybeEmbroider } = require('@linkedin/ts-web-tools');
+
   return maybeEmbroider(app);
 };

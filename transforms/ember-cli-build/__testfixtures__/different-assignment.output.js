@@ -7,12 +7,7 @@ module.exports = function (defaults) {
     // Add options here
   });
 
-  const { maybeEmbroider } = require('@embroider/test-setup');
+  const { maybeEmbroider } = require('@linkedin/ts-web-tools');
 
-  const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
-  const adapters = compatAdapters();
-
-  return maybeEmbroider(foo, {
-    compatAdapters: new Map(adapters),
-  });
+  return maybeEmbroider(foo);
 };

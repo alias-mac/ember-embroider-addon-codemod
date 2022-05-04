@@ -57,13 +57,9 @@ module.exports = function transformer(file, api) {
       .forEach((p) => {
         j(p).replaceWith(statements`
 
-          // temporary adapters for embroider build at LI
-          const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
-          const adapters = compatAdapters();
+          const { maybeEmbroider } = require('@linkedin/ts-web-tools');
 
-          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name}, {
-            compatAdapters: new Map(adapters),
-          });
+          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name});
         `);
       });
 
@@ -104,16 +100,12 @@ module.exports = function transformer(file, api) {
       },
     })
     .forEach((p) => {
-      j(p.parent).insertAfter(
+      j(p.parent).replaceWith(
         statements`
 
-          // temporary adapters for embroider build at LI
-          const { compatAdapters } = require('@linkedin/pemberly-embroider/src');
-          const adapters = compatAdapters();
+          const { maybeEmbroider } = require('@linkedin/ts-web-tools');
 
-          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name}, {
-            compatAdapters: new Map(adapters),
-          });
+          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name});
         `,
       );
     })
