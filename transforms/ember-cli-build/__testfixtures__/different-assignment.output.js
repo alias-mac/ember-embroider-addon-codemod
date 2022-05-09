@@ -8,6 +8,5 @@ module.exports = function (defaults) {
   });
 
   const { maybeEmbroider } = require('@linkedin/ts-web-tools');
-
   return maybeEmbroider(foo);
 };

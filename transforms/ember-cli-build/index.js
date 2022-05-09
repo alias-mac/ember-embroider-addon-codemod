@@ -2,7 +2,7 @@ const { getParser } = require('codemod-cli').jscodeshift;
 
 module.exports = function transformer(file, api) {
   const j = getParser(api);
-  const { statements } = j.template;
+  const { statement, statements } = j.template;
   const root = j(file.source);
 
   // find nodejs default export
@@ -35,33 +35,30 @@ module.exports = function transformer(file, api) {
     init: {
       type: 'CallExpression',
       callee: { name: 'require' },
-      arguments: [{ value: '@embroider/test-setup' }],
+      arguments: [{ value: '@linkedin/ts-web-tools' }],
     },
   });
 
   if (maybeEmbroider.size() >= 1) {
-    // already using embroider setup, replace code with specific for LI case
-    defaultExports
-      .find(j.ReturnStatement, {
-        argument: {
-          type: 'CallExpression',
-          callee: {
-            type: 'Identifier',
-            name: 'maybeEmbroider',
-          },
-          // not passing options already
-          arguments: { length: 1 },
-        },
-      })
-      // and convert them into `maybeEmbroider` calls
-      .forEach((p) => {
-        j(p).replaceWith(statements`
+    // already transformed
 
-          const { maybeEmbroider } = require('@linkedin/ts-web-tools');
+    return root.toSource();
+  }
 
-          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name});
-        `);
-      });
+  const emberMaybeEmbroider = defaultExports.find(j.VariableDeclarator, {
+    init: {
+      type: 'CallExpression',
+      callee: { name: 'require' },
+      arguments: [{ value: '@embroider/test-setup' }],
+    },
+  });
+
+  if (emberMaybeEmbroider.size() >= 1) {
+    emberMaybeEmbroider.find(j.CallExpression).forEach((p) => {
+      j(p).replaceWith(statement`
+        require('@linkedin/ts-web-tools')
+      `);
+    });
 
     return root.toSource();
   }
@@ -83,7 +80,7 @@ module.exports = function transformer(file, api) {
       const comments = p.value.comments;
       // unable to preserve comments with multi-statement, so using a different approach
       const maybeEmbroiderReturn = statements`
-        const { maybeEmbroider } = require('@embroider/test-setup');
+        const { maybeEmbroider } = require('@linkedin/ts-web-tools');
       `;
       maybeEmbroiderReturn[0].comments = comments;
 
@@ -96,17 +93,14 @@ module.exports = function transformer(file, api) {
       init: {
         type: 'CallExpression',
         callee: { name: 'require' },
-        arguments: [{ value: '@embroider/test-setup' }],
+        arguments: [{ value: '@linkedin/ts-web-tools' }],
       },
     })
     .forEach((p) => {
-      j(p.parent).replaceWith(
-        statements`
-
-          const { maybeEmbroider } = require('@linkedin/ts-web-tools');
-
-          return maybeEmbroider(${newEmberAddon.paths()[0].value.id.name});
-        `,
+      j(p.parent).insertAfter(
+        statement`return maybeEmbroider(${
+          newEmberAddon.paths()[0].value.id.name
+        });`,
       );
     })
     .toSource();
